@@ -1,0 +1,22 @@
+{
+  "name": "vite-browser",
+  "author": "Brian Jenkins",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "rollup": "npx rollup -c"
+  },
+  "devDependencies": {
+    "@tsconfig/node-lts": "latest",
+    "typescript": "latest",
+    "vite": "latest"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "sideEffects": true
+}
