@@ -146,7 +146,7 @@ const createNodeConfig = (isProduction) => {
           '@vue/compiler-dom': require.resolve(
             '@vue/compiler-dom/dist/compiler-dom.cjs.js'
           ),
-          'big.js': require.resolve('big.js/big.js')
+          //'big.js': require.resolve('big.js/big.js')
         }
       }),
       nodeResolve({ preferBuiltins: true }),
@@ -230,7 +230,7 @@ const browserConfig = {
     alias({
       // packages with "module" field that doesn't play well with cjs bundles
       entries: {
-        'big.js': require.resolve('big.js/big.js')
+        //'big.js': require.resolve('big.js/big.js')
       }
     }),
     nodeResolve({
