@@ -573,4 +573,4 @@ deno.lock
 package-lock.json
 
 # vite source
-vite/
+/vite/

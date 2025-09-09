@@ -9,10 +9,16 @@
     "preview": "vite preview",
     "rollup": "npx rollup -c"
   },
-  "devDependencies": {
+  "dependencies": {
     "@tsconfig/node-lts": "latest",
+    "node-stdlib-browser": "latest",
     "typescript": "latest",
     "vite": "latest"
+  },
+  "devDependencies": {
+  },
+  "optionalDependencies": {
+    "fsevents": "latest"
   },
   "engines": {
     "node": ">=18.0.0",
