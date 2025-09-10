@@ -3,7 +3,7 @@ import { polyfillNode } from "./util/vite/plugins/polyfillNode";
 import { virtualFileSystem } from "./util/vite/plugins/virtualFileSystem";
 
 export default defineConfig({
-    "base": "/browser-vite/",
+    "base": "/vite-browser/",
     "build": {
         "rollupOptions": {
             "input": {
@@ -14,12 +14,18 @@ export default defineConfig({
                 "cli": "vite/src/node/cli.ts",
                 //"module-runner": "vite/src/module-runner/index.ts"
                 // ---
-                "index": "index.html",
-                "sw": "src/sw.ts",
+                "main": "index.html",
+                "vite/sw": "src/sw.ts",
+                "vite/worker": "src/vite/worker.ts",
             },
             "output": {
-                "entryFileNames": (chunk) => chunk.name === 'sw' ? 'vite/sw.js' : '[name].js'
-            }
+                "entryFileNames": (chunk) => chunk.name.startsWith("vite/") ? "[name].js" : "assets/[name].js",
+            },
+            "external": [
+                "fsevents",
+                "rollup/parseAst",
+                /^#/u
+            ]
         },
         "minify": false,
         "modulePreload": { "polyfill": false }

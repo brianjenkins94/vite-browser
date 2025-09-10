@@ -2,6 +2,8 @@
 
 CWD=$(pwd)
 
+cd ..
+
 rm -rf vite/ vite-src/
 
 git clone --no-checkout --depth 1 --filter=tree:0 --sparse https://github.com/vitejs/vite.git vite-src

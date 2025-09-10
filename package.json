@@ -4,21 +4,53 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "rollup": "npx rollup -c"
+    "build": "npx tsx scripts/build.ts",
+    "dev": "CODE=0 ; npm run build && (npx vite preview & { npx vite build --watch ; CODE=$? ; kill -INT $(jobs -p) ; }) ; (exit $CODE)",
+    "rollup": "npx rollup -c",
+    "postinstall": "chmod 755 scripts/install.sh && ./scripts/install.sh"
   },
-  "dependencies": {
+  "devDependencies": {
     "@tsconfig/node-lts": "latest",
     "node-stdlib-browser": "latest",
+    "tsx": "latest",
     "typescript": "latest",
     "vite": "latest"
   },
-  "devDependencies": {
-  },
-  "optionalDependencies": {
-    "fsevents": "latest"
+  "peerDependencies": {
+    "@jridgewell/remapping": "^2.3.5",
+    "@polka/compression": "^1.0.0-next.25",
+    "@rolldown/pluginutils": "^1.0.0-beta.37",
+    "@rollup/plugin-alias": "^5.1.1",
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-dynamic-import-vars": "^2.1.5",
+    "artichokie": "^0.4.0",
+    "cac": "^6.7.14",
+    "chokidar": "^4.0.3",
+    "connect": "^3.7.0",
+    "convert-source-map": "^2.0.0",
+    "cors": "^2.8.5",
+    "cross-spawn": "^7.0.6",
+    "dotenv": "^17.2.2",
+    "dotenv-expand": "^12.0.3",
+    "es-module-lexer": "^1.7.0",
+    "estree-walker": "^3.0.3",
+    "etag": "^1.8.1",
+    "host-validation-middleware": "^0.1.1",
+    "http-proxy-3": "^1.21.0",
+    "launch-editor-middleware": "^2.11.1",
+    "magic-string": "^0.30.19",
+    "mlly": "^1.8.0",
+    "open": "^10.2.0",
+    "parse5": "^8.0.0",
+    "periscopic": "^4.0.2",
+    "postcss-import": "^16.1.1",
+    "postcss-load-config": "^6.0.1",
+    "postcss-modules": "^6.0.1",
+    "resolve.exports": "^2.0.3",
+    "sirv": "^3.0.2",
+    "strip-literal": "^3.0.0",
+    "tsconfck": "^3.1.6",
+    "ws": "^8.18.3"
   },
   "engines": {
     "node": ">=18.0.0",

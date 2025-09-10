@@ -35,10 +35,13 @@ export function virtualFileSystem(files = {}) {
                 // TODO: Improve
                 const packageJson = JSON.parse(await fs.readFile(await findParentPackageJson(__root)));
 
-                external = Object.keys({
-                    ...packageJson["devDependencies"],
-                    ...packageJson["optionalDependencies"]
-                });
+                external = [
+                    ...external,
+                    ...Object.keys({
+                        ...packageJson["dependencies"],
+                        ...packageJson["peerDependencies"]
+                    })
+                ];
             }
         },
         "resolveId": async function(id, importer, options) {
