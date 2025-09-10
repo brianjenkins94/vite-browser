@@ -14,7 +14,9 @@
     "node-stdlib-browser": "latest",
     "tsx": "latest",
     "typescript": "latest",
-    "vite": "latest"
+    "vite": "latest",
+    "workbox-core": "^7.3.0",
+    "workbox-window": "^7.3.0"
   },
   "peerDependencies": {
     "@jridgewell/remapping": "^2.3.5",

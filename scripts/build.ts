@@ -24,8 +24,8 @@ await new Promise<void>(function recurse(resolve, reject) {
 
         const [packageName] = /(?<=\[vite\]: Rollup failed to resolve import ").*?(?=")/u.exec(Buffer.concat(buffer).toString())
 
-        console.log(">", ["npm", "install", "--ignore-scripts", "--save-peer", packageName].join(" "))
-        const subprocess = spawn("npm", ["install", "--ignore-scripts", "--save-peer", packageName], {
+        console.log(">", ["npm", "install", "--ignore-scripts", "--save-peer", packageName + "@latest"].join(" "))
+        const subprocess = spawn("npm", ["install", "--ignore-scripts", "--save-peer", packageName + "@latest"], {
             "cwd": __root,
             "shell": true,
             "stdio": "inherit"

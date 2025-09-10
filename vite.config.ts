@@ -14,16 +14,16 @@ export default defineConfig({
                 "cli": "vite/src/node/cli.ts",
                 //"module-runner": "vite/src/module-runner/index.ts"
                 // ---
-                "main": "index.html",
-                "vite/sw": "src/sw.ts",
+                "main": "src/main.ts",
+                "vite/sw": "src/vite/sw.ts",
                 "vite/worker": "src/vite/worker.ts",
             },
             "output": {
-                "entryFileNames": (chunk) => chunk.name.startsWith("vite/") ? "[name].js" : "assets/[name].js",
+                "entryFileNames": "[name].js",
             },
             "external": [
                 "fsevents",
-                "rollup/parseAst",
+                "lightningcss",
                 /^#/u
             ]
         },
