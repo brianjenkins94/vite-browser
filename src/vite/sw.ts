@@ -1,96 +1,162 @@
 /// <reference lib="webworker" />
 export {};
 
-import { clientsClaim } from 'workbox-core';
-clientsClaim();
+import { clientsClaim } from "workbox-core";
+import { registerRoute } from "workbox-routing";
+import { NetworkOnly } from "workbox-strategies";
+
+clientsClaim(); // top-level, as recommended
 
 declare const self: ServiceWorkerGlobalScope;
 
-// --- path utils (dir keeps trailing slash; file paths do NOT) ---
-function dir(p: string) {
-  const s = ('/' + p).replace(/\/+/g, '/');
-  return s.endsWith('/') ? s : s + '/';
+/**
+ * Base and paths (fixed as requested)
+ */
+const BASE_PATH = "/vite-browser/";
+const VITE_PATH = ensureDirectoryPath(joinPaths(BASE_PATH, "vite"));
+const PREVIEW_ROOT_PATH = ensureDirectoryPath(joinPaths(VITE_PATH, "preview"));
+const BROADCAST_CHANNEL_NAME = PREVIEW_ROOT_PATH + "bus";
+
+/**
+ * Path helpers
+ */
+function ensureDirectoryPath(input: string): string {
+  const normalized = ("/" + input).replace(/\/+/g, "/");
+  return normalized.endsWith("/") ? normalized : normalized + "/";
 }
-function pathJoin(...segs: string[]) {
-  return ('/' + segs.map(s => s.replace(/^\/+|\/+$/g, '')).filter(Boolean).join('/')).replace(/\/+/g, '/');
+function joinPaths(...segments: string[]): string {
+  return (
+    "/" +
+    segments
+      .map((s) => String(s).replace(/^\/+|\/+$/g, ""))
+      .filter((s) => s.length > 0)
+      .join("/")
+  ).replace(/\/+/g, "/");
 }
 
-const BASE        = dir((import.meta as any).env?.BASE_URL || '/'); // "/" or "/repo-name/"
-const VITE_PREFIX = dir(pathJoin(BASE, 'vite'));                    // "/vite/" or "/repo-name/vite/"
-const CHANNEL_NAME = `${VITE_PREFIX}bus`;
+/**
+ * Install / activate
+ */
+self.addEventListener("install", (event) => event.waitUntil(self.skipWaiting()));
+self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
 
-self.addEventListener('install', e => e.waitUntil(self.skipWaiting()));
-self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+/**
+ * Bridge to the bundler worker via BroadcastChannel
+ */
+const broadcastChannel = new BroadcastChannel(BROADCAST_CHANNEL_NAME);
 
-// ---- Bridge to bundler worker ----
-const bc = new BroadcastChannel(CHANNEL_NAME);
-const pending = new Map<string, (r: Response) => void>();
+type Resolver = (response: Response) => void;
+const pendingById = new Map<string, Resolver>();
 
-bc.addEventListener('message', (evt) => {
-  const m = evt.data || {};
-  if (m.type === 'COMPILE_RESPONSE') {
-    const { id, ok, status = ok ? 200 : 500, body = '', headers = {} } = m;
-    const res = new Response(ok ? body : 'Not Found', { status, headers });
-    const resolve = pending.get(id);
-    if (resolve) { pending.delete(id); resolve(res); }
+broadcastChannel.addEventListener("message", (event) => {
+  const message = event.data;
+  if (message !== undefined && message !== null && typeof message === "object") {
+    if (message.type === "COMPILE_RESPONSE") {
+      const id = message.id as string | undefined;
+      const ok = message.ok as boolean | undefined;
+      const status = (message.status as number | undefined) ?? (ok === true ? 200 : 500);
+      const body = message.body as string | undefined;
+      const headers = (message.headers as Record<string, string> | undefined) ?? {};
+
+      const resolver = id !== undefined ? pendingById.get(id) : undefined;
+      if (resolver !== undefined) {
+        pendingById.delete(id!);
+        const response =
+          ok === true && body !== undefined
+            ? new Response(body, { status, headers })
+            : new Response("Not Found", { status });
+        resolver(response);
+      }
+    }
   }
 });
 
-function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
-
-async function viaWorker(urlPath: string): Promise<Response> {
-  const id = uid();
-  const waitP = new Promise<Response>(resolve => pending.set(id, resolve));
-  bc.postMessage({ type: 'COMPILE_REQUEST', id, url: urlPath });
-
-  // 2.5s timeout -> return HTML so you can see details in the iframe
-  const timeoutP = new Promise<Response>(resolve =>
-    setTimeout(() => resolve(new Response(
-      `<!doctype html><meta charset="utf-8"><title>SW timeout</title>
-       <pre>SW timed out waiting for worker\nkey: ${urlPath}</pre>`,
-      { status: 504, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
-    )), 2500)
-  );
-  return Promise.race([waitP, timeoutP]);
+function createId(): string {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
-// SW landing page for exact /<base>/vite/
-function landing(): Response {
+function compileThroughWorker(urlPathname: string): Promise<Response> {
+  const id = createId();
+  const waitPromise = new Promise<Response>((resolve) => pendingById.set(id, resolve));
+
+  broadcastChannel.postMessage({
+    type: "COMPILE_REQUEST",
+    id,
+    url: urlPathname,
+  });
+
+  // Small timeout returns HTML so issues are visible inside the iframe
+  const timeoutPromise = new Promise<Response>((resolve) =>
+    setTimeout(
+      () =>
+        resolve(
+          new Response(
+            `<!doctype html><meta charset="utf-8"><pre>Service Worker timed out waiting for worker\nkey: ${urlPathname}</pre>`,
+            { status: 504, headers: { "Content-Type": "text/html; charset=utf-8" } }
+          )
+        ),
+      2500
+    )
+  );
+
+  return Promise.race([waitPromise, timeoutPromise]);
+}
+
+/**
+ * Landing page for exact "/vite-browser/vite/"
+ */
+function landingResponse(): Response {
   const html = `<!doctype html>
 <html><head><meta charset="utf-8"><title>Vite Sandbox SW</title></head>
 <body>
   <h1>Service Worker landing</h1>
-  <p>This page is generated by the SW at <code>${VITE_PREFIX}</code>.</p>
-  <p>Open <a href="${pathJoin(VITE_PREFIX, 'preview/')}">${pathJoin(VITE_PREFIX, 'preview/')}</a> to see the preview.</p>
+  <p>This page is generated by the Service Worker at <code>${VITE_PATH}</code>.</p>
+  <p>Open <a href="${PREVIEW_ROOT_PATH}">${PREVIEW_ROOT_PATH}</a> to see the preview.</p>
 </body></html>`;
-  return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+  return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
 }
 
-self.addEventListener('fetch', (event: FetchEvent) => {
-  const url = new URL(event.request.url);
+/**
+ * Routes (most specific first)
+ */
 
-  if (!url.pathname.startsWith(VITE_PREFIX)) return;
+// 1) Exact landing at /vite-browser/vite/
+registerRoute(
+  ({ url, request }) => request.method === "GET" && url.pathname === VITE_PATH,
+  () => landingResponse()
+);
 
-  if (url.pathname === VITE_PREFIX && event.request.method === 'GET') {
-    event.respondWith(landing()); return;
+// 2) Virtual project under /vite-browser/vite/preview/** — compile via worker
+registerRoute(
+  ({ url, request }) => request.method === "GET" && url.pathname.startsWith(PREVIEW_ROOT_PATH),
+  ({ url }) => {
+    const normalized = url.pathname.endsWith("/preview/")
+      ? joinPaths(url.pathname, "index.html")
+      : url.pathname;
+    return compileThroughWorker(normalized);
   }
+);
 
-  if (url.pathname.startsWith(pathJoin(VITE_PREFIX, 'preview/')) && event.request.method === 'GET') {
-    event.respondWith((async () => {
-      const normalized = url.pathname.endsWith('/preview/')
-        ? pathJoin(url.pathname, 'index.html') // <-- no trailing slash
-        : url.pathname;
-      return viaWorker(normalized);
-    })());
-    return;
-  }
+// 3) Everything else under /vite-browser/vite/** should just hit the network
+registerRoute(
+  ({ url, request }) =>
+    request.method === "GET" &&
+    url.origin === self.location.origin &&
+    url.pathname.startsWith(VITE_PATH),
+  new NetworkOnly()
+);
 
-  event.respondWith(fetch(event.request));
-});
-
-// Ping/pong
-self.addEventListener('message', (event: ExtendableMessageEvent) => {
-  if (event.data?.type === 'PING_FROM_PAGE') {
-    (event.source as Client | null)?.postMessage({ type: 'PONG_FROM_SW', at: Date.now() });
+/**
+ * Simple ping/pong for host <-> SW visibility
+ */
+self.addEventListener("message", (event: ExtendableMessageEvent) => {
+  const data = event.data;
+  if (data !== undefined && data !== null && typeof data === "object") {
+    if (data.type === "PING_FROM_PAGE") {
+      const source = event.source as Client | null;
+      if (source !== null) {
+        source.postMessage({ type: "PONG_FROM_SW", at: Date.now() });
+      }
+    }
   }
 });
