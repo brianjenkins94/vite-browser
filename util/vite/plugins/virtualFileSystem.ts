@@ -35,13 +35,7 @@ export function virtualFileSystem(files = {}) {
                 // TODO: Improve
                 const packageJson = JSON.parse(await fs.readFile(await findParentPackageJson(__root)));
 
-                external = [
-                    ...external,
-                    ...Object.keys({
-                        ...packageJson["dependencies"],
-                        ...packageJson["peerDependencies"]
-                    })
-                ];
+                external = Object.keys(packageJson["dependencies"])
             }
         },
         "resolveId": async function(id, importer, options) {
@@ -68,7 +62,7 @@ export function virtualFileSystem(files = {}) {
 
                 if (resolved === null) {
                     // TODO: Extract as fallback
-                    resolved = await this.resolve(id.startsWith("vite/") ? path.join(__root, "vite", "src", id.substring("vite/".length)) : path.join(__root, "node_modules", id), importer, options);
+                    resolved = await this.resolve(id.startsWith("vite/") ? path.join(__root, id.replace("vite", "vite/src")) : path.join(__root, "node_modules", id), importer, options);
 
                     if (resolved === null && !shouldBeExternal(id)) {
                         return;

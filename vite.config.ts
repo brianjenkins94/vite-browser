@@ -31,8 +31,7 @@ export default defineConfig({
                 "lightningcss",
                 "rollup/parseAst",
                 /^#/u,
-                ...Object.keys(packageJson["dependencies"] ?? {}),
-                ...Object.keys(packageJson["peerDependencies"] ?? {})
+                ...Object.keys(packageJson["dependencies"] ?? {})
             ]
         },
         "minify": false,
