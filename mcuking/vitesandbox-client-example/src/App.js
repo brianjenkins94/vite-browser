@@ -40,7 +40,7 @@ function App() {
       </div>
       <div className='preview'>
         <Sandbox
-          bundlerURL="https://mcuking.github.io/vitesandbox-client/"
+          bundlerURL="http://localhost:8888/"
           files={files} />
       </div>
     </div>

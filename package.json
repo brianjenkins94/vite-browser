@@ -5,20 +5,21 @@
   "type": "module",
   "scripts": {
     "build": "npx tsx scripts/build.ts",
-    "dev": "CODE=0 ; npm run build && (npx vite preview & { npx vite build --watch ; CODE=$? ; kill -INT $(jobs -p) ; }) ; (exit $CODE)",
+    "dev": "CODE=0 ; (npx vite preview --open & { npx vite build --watch ; CODE=$? ; kill -INT $(jobs -p) ; }) ; (exit $CODE)",
     "rollup": "npx rollup -c",
     "postinstall": "chmod 755 scripts/install.sh && ./scripts/install.sh"
   },
   "devDependencies": {
     "@tsconfig/node-lts": "latest",
+    "@types/node": "latest",
     "node-stdlib-browser": "latest",
     "tsx": "latest",
     "typescript": "latest",
     "vite": "latest",
-    "workbox-core": "^7.3.0",
-    "workbox-routing": "^7.3.0",
-    "workbox-strategies": "^7.3.0",
-    "workbox-window": "^7.3.0"
+    "workbox-core": "latest",
+    "workbox-routing": "latest",
+    "workbox-strategies": "latest",
+    "workbox-window": "latest"
   },
   "peerDependencies": {
     "@jridgewell/remapping": "^2.3.5",

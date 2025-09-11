@@ -1,6 +1,11 @@
+import * as path from "path";
+import * as fs from "./util/fs";
 import { defineConfig } from "vite";
 import { polyfillNode } from "./util/vite/plugins/polyfillNode";
 import { virtualFileSystem } from "./util/vite/plugins/virtualFileSystem";
+import { __root } from "./util/env";
+
+const packageJson = JSON.parse(await fs.readFile(path.join(__root, "package.json")));
 
 export default defineConfig({
     "base": "/vite-browser/",
@@ -24,7 +29,10 @@ export default defineConfig({
             "external": [
                 "fsevents",
                 "lightningcss",
-                /^#/u
+                "rollup/parseAst",
+                /^#/u,
+                ...Object.keys(packageJson["dependencies"] ?? {}),
+                ...Object.keys(packageJson["peerDependencies"] ?? {})
             ]
         },
         "minify": false,
