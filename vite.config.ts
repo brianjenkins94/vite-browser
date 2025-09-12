@@ -9,6 +9,14 @@ const packageJson = JSON.parse(await fs.readFile(path.join(__root, "package.json
 
 export default defineConfig({
     "base": "/vite-browser/",
+    "resolve": {
+        "alias": [
+            {
+                "find": /^vite(?!\/src)(.*)$/u,
+                "replacement": path.join(__root, "vite", "src",  "$1")
+            }
+        ]
+    },
     "build": {
         "rollupOptions": {
             "input": {
@@ -38,7 +46,6 @@ export default defineConfig({
         "modulePreload": { "polyfill": false }
     },
     "plugins": [
-        polyfillNode(),
         virtualFileSystem()
     ]
 });

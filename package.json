@@ -9,6 +9,9 @@
     "rollup": "npx rollup -c",
     "postinstall": "chmod 755 scripts/install.sh && ./scripts/install.sh"
   },
+  "dependencies": {
+    "esbuild": "latest"
+  },
   "devDependencies": {
     "@tsconfig/node-lts": "latest",
     "@types/node": "latest",
@@ -52,6 +55,7 @@
     "postcss-load-config": "^6.0.1",
     "postcss-modules": "^6.0.1",
     "resolve.exports": "^2.0.3",
+    "rollup": "^4.50.1",
     "sirv": "^3.0.2",
     "strip-literal": "^3.0.0",
     "tsconfck": "^3.1.6",

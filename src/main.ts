@@ -1,6 +1,6 @@
 // src/main.ts
 
-import * as vite from "../../vite/src/node";
+import * as vite from "../vite/src/node";
 
 console.log(vite.resolveConfig({}, "serve"));
 
