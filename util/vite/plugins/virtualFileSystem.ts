@@ -6,14 +6,14 @@ import * as url from "url";
 
 const extendedStdLibBrowser = {
     ...stdLibBrowser,
-    "node:inspector": stdLibBrowser["child_process"],
-    "inspector": stdLibBrowser["child_process"],
-    "node:perf_hooks": stdLibBrowser["child_process"],
-    "perf_hooks": stdLibBrowser["child_process"],
-    "node:v8": stdLibBrowser["child_process"],
-    "v8": stdLibBrowser["child_process"],
-    "node:worker_threads": stdLibBrowser["child_process"],
-    "worker_threads": stdLibBrowser["child_process"]
+    "node:inspector": "empty.js",
+    "inspector": "empty.js",
+    "node:perf_hooks": "empty.js",
+    "perf_hooks": "empty.js",
+    "node:v8": "empty.js",
+    "v8": "empty.js",
+    "node:worker_threads": "empty.js",
+    "worker_threads": "empty.js"
 };
 
 // TODO: Improve
@@ -50,7 +50,6 @@ export function virtualFileSystem(files = {}) {
                 return files;
             }, {});
 
-
             external = config.build.rollupOptions.external;
 
             if (external === undefined) {
@@ -69,9 +68,17 @@ export function virtualFileSystem(files = {}) {
                 return path.join(__root, id);
             }
 
-            let resolved = await this.resolve(id, importer, options);
+            let resolveId = id;
 
-            return id.startsWith(".") ? resolved["id"] : isBuiltin(id) /* || shouldBeExternal(id) */ ? id : undefined;
+            if (shouldBeExternal(id)) {
+                console.log(id);
+            }
+
+            if (!isBuiltin(id.split("/")[0])) {
+                resolveId = (await this.resolve(id, importer, options))["id"];
+            }
+
+            return resolveId;
         },
         "load": async function(id) {
             if (id.includes("?")) {
@@ -95,19 +102,14 @@ export function virtualFileSystem(files = {}) {
 
             id = id.replace(path.join(__root, "/").replace(/\\/gu, "/"), "");
 
-            if (isBuiltin(id)) {
-                return {
-                    "code": await fs.readFile(extendedStdLibBrowser["child_process"]), // Change this back to id
-                    "moduleSideEffects": false
-                };
+            if (shouldBeExternal(id)) {
+                console.log(id);
             }
 
-            if (shouldBeExternal(id)) {
+            if (isBuiltin(id)) {
                 const code = Object.entries(await import(id)).map(function([key, value]) {
                     return `export ${key === "default" ? "default" : `const ${key} =`} ${(typeof value === "function" ? "() => {}" : undefined)};`;
                 }).join("\n");
-
-                return code;
 
                 return {
                     "code": code,

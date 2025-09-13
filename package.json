@@ -10,7 +10,9 @@
     "postinstall": "chmod 755 scripts/install.sh && ./scripts/install.sh"
   },
   "dependencies": {
-    "esbuild": "latest"
+    "esbuild": "^0.25.9",
+    "postcss": "^8.5.6",
+    "rollup": "^4.50.1"
   },
   "devDependencies": {
     "@tsconfig/node-lts": "latest",
@@ -55,7 +57,6 @@
     "postcss-load-config": "^6.0.1",
     "postcss-modules": "^6.0.1",
     "resolve.exports": "^2.0.3",
-    "rollup": "^4.50.1",
     "sirv": "^3.0.2",
     "strip-literal": "^3.0.0",
     "tsconfck": "^3.1.6",

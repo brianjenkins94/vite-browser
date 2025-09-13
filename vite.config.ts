@@ -1,7 +1,6 @@
 import * as path from "path";
 import * as fs from "./util/fs";
 import { defineConfig } from "vite";
-import { polyfillNode } from "./util/vite/plugins/polyfillNode";
 import { virtualFileSystem } from "./util/vite/plugins/virtualFileSystem";
 import { __root } from "./util/env";
 
@@ -36,10 +35,11 @@ export default defineConfig({
             },
             "external": [
                 "fsevents",
+                "esbuild",
                 "lightningcss",
                 "rollup/parseAst",
-                /^#/u,
-                ...Object.keys(packageJson["dependencies"] ?? {})
+                "sugarss", // postcss-import -> sugarss
+                /^#/u
             ]
         },
         "minify": false,
